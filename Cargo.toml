@@ -1,0 +1,41 @@
+[package]
+name = "rdp-audit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.89"
+authors = ["rdp-audit contributors"]
+description = "Educational RDP/NLA (CredSSP) credential audit tool for authorized penetration-test labs"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["rdp", "nla", "credssp", "pentest", "audit"]
+categories = ["command-line-utilities", "network-programming"]
+
+[dependencies]
+# --- IronRDP 0.10 line (exact pins; every API used in this project was verified
+# against these specific releases) ---
+ironrdp-connector = "=0.10.0" # connector state machine, CredSSP sequence, error kinds
+ironrdp-async = "=0.10.0" # Framed I/O helpers, connect_begin/mark_as_upgraded
+ironrdp-tokio = "=0.10.0" # Tokio-backed Framed streams (TokioFramed)
+ironrdp-pdu = "=0.9.0" # PDU types for the client Config (keyboard, platform, flags)
+ironrdp-core = "=0.2.1" # WriteBuf used by the CredSSP exchange
+
+# --- Async runtime and TLS ---
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "io-util", "sync"] }
+tokio-rustls = "=0.26.2" # re-exports rustls 0.23; async TLS upgrade for CredSSP
+# The OS TLS stack (Schannel on Windows) is only used as a compatibility
+# fallback for legacy RDP servers that offer just RSA key exchange / AES-CBC
+# suites, which rustls does not implement. It is an in-process library, not an
+# external binary.
+native-tls = "0.2"
+tokio-native-tls = "0.3"
+x509-cert = "0.2" # extract the server public key from the TLS certificate
+
+# --- CLI, errors, time, streams ---
+clap = { version = "4", features = ["derive"] }
+thiserror = "2"
+chrono = "0.4"
+futures = "0.3"
+
+[profile.release]
+lto = "thin"
+strip = true
